@@ -21,6 +21,9 @@ const CSS_PROPERTIES = {
 };
 
 const listeners = new Set();
+let appliedConfig = null;
+let restorePromise = null;
+let restoringCode = null;
 
 /**
  * Normalizes API data so a partial or malformed configuration remains usable.
@@ -108,6 +111,7 @@ const AirlineThemeManager = {
         });
 
         root.setAttribute("dir", themeConfig.rtl ? "rtl" : "ltr");
+        appliedConfig = themeConfig;
         notifyListeners(themeConfig);
 
         return themeConfig;
@@ -128,15 +132,30 @@ const AirlineThemeManager = {
      *
      * @returns {Promise<Object|null>} Applied configuration, or null when none is saved.
      */
-    async restore() {
+    restore() {
         const code = sessionStorage.getItem(STORAGE_KEY);
 
         if (!code) {
-            return null;
+            return Promise.resolve(null);
         }
 
-        const config = await this.fetch(code);
-        return this.apply(config);
+        if (appliedConfig?.code === code) {
+            return Promise.resolve(appliedConfig);
+        }
+
+        if (restorePromise && restoringCode === code) {
+            return restorePromise;
+        }
+
+        restoringCode = code;
+        restorePromise = this.fetch(code)
+            .then((config) => this.apply(config))
+            .finally(() => {
+                restorePromise = null;
+                restoringCode = null;
+            });
+
+        return restorePromise;
     },
 
     /**
