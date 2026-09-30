@@ -46,16 +46,17 @@ function waitForRetry(delayMs, signal) {
  */
 async function fetchJsonWithRetry(url, signal) {
     const maxRetries = 2;
+    let response;
 
     for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
         try {
-            const response = await fetch(url, { signal });
+            response = await fetch(url, { signal });
 
             if (!response.ok) {
                 throw new Error(`Request failed (${response.status}): ${url}`);
             }
 
-            return await response.json();
+            break;
         } catch (error) {
             const isFinalAttempt = attempt === maxRetries;
 
@@ -67,7 +68,11 @@ async function fetchJsonWithRetry(url, signal) {
         }
     }
 
-    throw new Error(`Unable to fetch: ${url}`);
+    try {
+        return await response.json();
+    } catch (error) {
+        throw new Error(`Invalid JSON response: ${url}`);
+    }
 }
 
 /**
