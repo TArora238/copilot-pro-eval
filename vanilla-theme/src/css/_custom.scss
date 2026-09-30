@@ -1,0 +1,19 @@
+/* These inject tags are used for dynamically creating imports for themelet styles, you can place them where ever you like in this file. */
+
+/* inject:imports */
+
+@import 'liferay-font-awesome/scss/font-awesome';
+@import 'liferay-font-awesome/scss/glyphicons';
+
+/* endinject */
+
+/* This file allows you to override default styles in one central location for easier upgrade and maintenance. */
+
+:root {
+	--color-primary: #1B365D;
+	--color-secondary: #FFFFFF;
+	--color-accent: #C9A227;
+	--font-display: Arial;
+	--font-body: Arial;
+	--logo-url: "/o/vanilla-theme/images/star-alliance-logo.svg";
+}
