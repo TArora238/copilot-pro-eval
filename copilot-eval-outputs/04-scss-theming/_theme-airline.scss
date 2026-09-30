@@ -1,0 +1,9 @@
+@mixin airline-theme($code, $primary, $secondary, $accent, $font-display, $font-body) {
+  [data-airline="#{$code}"] {
+    --color-primary: #{$primary};
+    --color-secondary: #{$secondary};
+    --color-accent: #{$accent};
+    --font-family-display: #{$font-display};
+    --font-family-body: #{$font-body};
+  }
+}

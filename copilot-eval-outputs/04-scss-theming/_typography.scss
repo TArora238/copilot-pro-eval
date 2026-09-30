@@ -1,0 +1,13 @@
+body {
+  font-family: var(--font-family-body, Arial, sans-serif);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.heading {
+  font-family: var(--font-family-display, Arial, sans-serif);
+}
