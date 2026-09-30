@@ -28,6 +28,7 @@ export default function initJourneySteps(container) {
     const media = gsap.matchMedia();
     let refreshTimer = null;
     let destroyed = false;
+    let navigationHandle = null;
 
     /**
      * Creates one responsive, play-once ScrollTrigger animation.
@@ -78,7 +79,7 @@ export default function initJourneySteps(container) {
 
     resizeObserver.observe(container);
 
-    return () => {
+    function cleanup() {
         if (destroyed) {
             return;
         }
@@ -87,7 +88,15 @@ export default function initJourneySteps(container) {
         window.clearTimeout(refreshTimer);
         resizeObserver.disconnect();
         media.revert();
-    };
+        navigationHandle?.detach();
+        navigationHandle = null;
+    }
+
+    if (window.Liferay?.on) {
+        navigationHandle = window.Liferay.on("beforeNavigate", cleanup);
+    }
+
+    return cleanup;
 }
 
 /**
@@ -96,11 +105,8 @@ export default function initJourneySteps(container) {
  * const section = document.querySelector(".journey-steps");
  * const destroyJourneySteps = section ? initJourneySteps(section) : () => {};
  *
- * Liferay.on("destroyPortlet", (event) => {
- *   if (event.portletId === "YOUR_PORTLET_ID") {
- *     destroyJourneySteps();
- *   }
- * });
+ * The initializer automatically tears down before Liferay Senna SPA navigation.
+ * Call destroyJourneySteps() only when this portlet is removed independently.
  *
  * Dynamic portlet stacking can change this section's document position after its
  * initial render. The ResizeObserver debounces ScrollTrigger.refresh() so its
