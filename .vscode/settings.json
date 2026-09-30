@@ -1,0 +1,8 @@
+{
+  "chat.tools.terminal.autoApprove": {
+    "/^winpty node\\.exe --input-type=module --eval \"import \\{ readFile \\} from 'node:fs/promises'; const source = await readFile\\('copilot-eval-outputs/01-js-core/1\\.2-cache-module\\.js', 'utf8'\\); const moduleUrl = 'data:text/javascript;base64,' \\+ Buffer\\.from\\(source\\)\\.toString\\('base64'\\); const \\{ default: cache \\} = await import\\(moduleUrl\\); let resolveFetch; let calls = 0; const fetchFn = \\(\\) => \\{ calls \\+= 1; return new Promise\\(\\(resolve\\) => \\{ resolveFetch = resolve; \\}\\); \\}; const first = cache\\.getOrFetch\\('airline:LH:profile', fetchFn, 1000\\); const second = cache\\.getOrFetch\\('airline:LH:profile', fetchFn, 1000\\); if \\(first !== second\\) throw new Error\\('Concurrent callers did not receive the same promise'\\); await Promise\\.resolve\\(\\); if \\(calls !== 1\\) throw new Error\\('fetchFn was called ' \\+ calls \\+ ' times'\\); resolveFetch\\(\\{ code: 'LH' \\}\\); const \\[firstValue, secondValue\\] = await Promise\\.all\\(\\[first, second\\]\\); if \\(firstValue\\.code !== 'LH' \\|\\| secondValue\\.code !== 'LH'\\) throw new Error\\('Shared fetch result failed'\\); let retryCalls = 0; await cache\\.getOrFetch\\('airline:SQ:profile', \\(\\) => \\{ retryCalls \\+= 1; return Promise\\.reject\\(new Error\\('temporary failure'\\)\\); \\}, 1000\\)\\.catch\\(\\(\\) => \\{\\}\\); await cache\\.getOrFetch\\('airline:SQ:profile', \\(\\) => \\{ retryCalls \\+= 1; return Promise\\.resolve\\(\\{ code: 'SQ' \\}\\); \\}, 1000\\); if \\(retryCalls !== 2\\) throw new Error\\('Failed fetch was not cleared for retry'\\); console\\.log\\('Concurrent fetch deduplication verified\\.'\\);\"$/": {
+      "approve": true,
+      "matchCommandLine": true
+    }
+  }
+}

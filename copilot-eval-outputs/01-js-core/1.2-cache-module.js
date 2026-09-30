@@ -10,6 +10,7 @@
  */
 function createCache() {
     const store = new Map();
+    const pendingFetches = new Map();
 
     /**
      * Returns a valid cached value, removing it when it has expired.
@@ -48,7 +49,8 @@ function createCache() {
     }
 
     /**
-     * Returns a valid cached value or fetches and caches a fresh value.
+    * Returns a valid cached value or fetches and caches a fresh value. Concurrent
+    * requests for the same missing key share one pending fetch promise.
      *
      * @param {string} key Cache key.
      * @param {() => Promise<*>} fetchFn Function that resolves to fresh data.
@@ -62,10 +64,28 @@ function createCache() {
             return Promise.resolve(cachedData);
         }
 
-        return Promise.resolve(fetchFn()).then((data) => {
-            set(key, data, ttlMs);
-            return data;
-        });
+        const pendingFetch = pendingFetches.get(key);
+
+        if (pendingFetch) {
+            return pendingFetch;
+        }
+
+        const fetchPromise = Promise.resolve()
+            .then(fetchFn)
+            .then(
+                (data) => {
+                    set(key, data, ttlMs);
+                    pendingFetches.delete(key);
+                    return data;
+                },
+                (error) => {
+                    pendingFetches.delete(key);
+                    throw error;
+                }
+            );
+
+        pendingFetches.set(key, fetchPromise);
+        return fetchPromise;
     }
 
     /**
