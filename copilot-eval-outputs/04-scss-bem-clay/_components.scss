@@ -1,0 +1,36 @@
+@use "scope" as dxp;
+
+.dxp-card {
+  @include dxp.scope {
+    display: grid;
+    gap: 1rem;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
+    border-radius: var(--border-radius-card);
+    background-color: var(--color-secondary);
+    color: var(--color-primary);
+  }
+
+  &__header {
+    @include dxp.scope {
+      padding: 1rem 1.25rem;
+      background-color: color-mix(in srgb, var(--color-primary) 8%, var(--color-secondary));
+      font-family: var(--font-family-display, Arial, sans-serif);
+      text-align: start;
+    }
+  }
+
+  &__header--active {
+    @include dxp.scope {
+      border-inline-start: 0.25rem solid var(--color-accent);
+      background-color: var(--color-primary);
+      color: var(--color-accent);
+    }
+  }
+
+  &__body {
+    @include dxp.scope {
+      padding: 0 1.25rem 1.25rem;
+    }
+  }
+}

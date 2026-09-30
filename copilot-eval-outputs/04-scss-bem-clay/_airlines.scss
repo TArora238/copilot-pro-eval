@@ -1,0 +1,28 @@
+@use "theme-airline" as theme;
+
+@include theme.airline-theme(
+  "LH",
+  #05164d,
+  #f7f7f7,
+  #ffcc00,
+  '"Lufthansa Head", Arial, sans-serif',
+  'Arial, sans-serif'
+);
+
+@include theme.airline-theme(
+  "SQ",
+  #f0a500,
+  #0a2240,
+  #ffffff,
+  '"Singapore Sans", Arial, sans-serif',
+  'Arial, sans-serif'
+);
+
+@include theme.airline-theme(
+  "AC",
+  #f01428,
+  #1f1f1f,
+  #ffffff,
+  '"Helvetica Neue", Arial, sans-serif',
+  'Arial, sans-serif'
+);

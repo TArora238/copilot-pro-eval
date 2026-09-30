@@ -1,0 +1,30 @@
+@use "scope" as dxp;
+
+// Apply this class only to a custom region that must host legacy Bootstrap markup.
+.dxp-layout__legacy-grid {
+  @include dxp.scope {
+    > .container {
+      width: 100%;
+      max-width: none;
+      padding-inline: 0;
+    }
+
+    > .container > .row {
+      margin-inline: 0;
+    }
+
+    > .container > .row > [class*="col-"] {
+      padding-inline: 0;
+    }
+  }
+}
+
+// Liferay places portlets in .portlet-boundary. Only reset direct drop-ins owned by this layout.
+.dxp-layout__portlet {
+  @include dxp.scope {
+    > .portlet-boundary,
+    > .portlet-boundary > .portlet {
+      margin: 0;
+    }
+  }
+}

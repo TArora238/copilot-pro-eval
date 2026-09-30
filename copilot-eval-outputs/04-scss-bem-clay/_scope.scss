@@ -1,0 +1,5 @@
+@mixin scope() {
+  [data-dxp-scope] & {
+    @content;
+  }
+}
