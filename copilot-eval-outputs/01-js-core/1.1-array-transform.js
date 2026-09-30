@@ -75,10 +75,12 @@ function buildFlightsByAirline(flights) {
         departureTime: flight.departureTime
       };
     })
-    .sort(
-      (firstFlight, secondFlight) =>
-        new Date(firstFlight.departureTime) - new Date(secondFlight.departureTime)
-    )
+    .sort((firstFlight, secondFlight) => {
+      const timeDifference =
+        new Date(firstFlight.departureTime) - new Date(secondFlight.departureTime);
+
+      return timeDifference || firstFlight.airline.localeCompare(secondFlight.airline);
+    })
     .reduce((groupedFlights, flight) => {
       const { departureTime, ...displayFlight } = flight;
 
