@@ -34,11 +34,13 @@ export default function initHistoryTimeline(container) {
     const initialCardStyles = cards.map((card) => card.getAttribute("style"));
     const years = cards.map(getCardYear);
     const counterState = { value: years[0] };
+    const portletBoundary = container.closest(".portlet-boundary");
 
     let activeCardIndex = -1;
     let counterTween = null;
     let destroyed = false;
     let navigationHandle = null;
+    let removalObserver = null;
 
     gsap.registerPlugin(ScrollTrigger);
 
@@ -174,7 +176,7 @@ export default function initHistoryTimeline(container) {
 
         return () => {
             counterTween?.kill();
-            horizontalTween.scrollTrigger?.kill();
+            horizontalTween.scrollTrigger?.kill(true);
             horizontalTween.kill();
             cardTriggers.forEach((trigger) => trigger.kill());
             restoreStyle(track, initialTrackStyle);
@@ -241,10 +243,23 @@ export default function initHistoryTimeline(container) {
         restoreStyle(progressBar, initialProgressStyle);
         navigationHandle?.detach();
         navigationHandle = null;
+        removalObserver?.disconnect();
+        removalObserver = null;
     }
 
     if (window.Liferay?.on) {
         navigationHandle = window.Liferay.on("beforeNavigate", cleanup);
+    }
+
+    if (portletBoundary && window.MutationObserver && document.body) {
+        removalObserver = new window.MutationObserver(() => {
+            // pinReparent can keep the pinned section connected under <body> after
+            // Liferay has discarded the portlet that originally owned it.
+            if (!portletBoundary.isConnected) {
+                cleanup();
+            }
+        });
+        removalObserver.observe(document.body, { childList: true, subtree: true });
     }
 
     return cleanup;
@@ -257,11 +272,13 @@ export default function initHistoryTimeline(container) {
  * const destroyTimeline = timeline ? initHistoryTimeline(timeline) : () => {};
  *
  * Place .timeline-section in a full-width portlet wrapper rather than directly
- * inside a Bootstrap .row or .col-* flex container. pinSpacing: false avoids a
- * ScrollTrigger spacer changing the DXP column structure; the initializer instead
- * reserves the needed height on the section. pinReparent: true prevents inherited
- * column transforms from breaking the fixed pinned state. Scope selectors to the
- * portlet because reparenting temporarily moves the pinned section under <body>.
+ * inside a Bootstrap .row or .col-* flex container. pinSpacing: false avoids added
+ * spacer space changing the DXP column structure; the initializer instead reserves
+ * the needed height on the section. ScrollTrigger still creates a pin-spacer, which
+ * is removed by killing the pin trigger with reversion during teardown. pinReparent:
+ * true prevents inherited column transforms from breaking the fixed pinned state.
+ * A scoped MutationObserver is a fallback when Liferay removes the portlet boundary
+ * before its SPA event handler runs, while the pinned section is under <body>.
  *
  * The initializer unregisters itself before Senna SPA navigation, so the pin,
  * counter animations, child triggers, and temporary inline styles cannot survive
