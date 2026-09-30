@@ -16,9 +16,12 @@ const initialState = () => ({
     }
 });
 
-let state = initialState();
-let requestId = 0;
-const listeners = new Set();
+const storeKey = Symbol.for("star-alliance.flight-search-state");
+const sharedStore = window[storeKey] || (window[storeKey] = {
+    state: initialState(),
+    requestId: 0,
+    listeners: new Set()
+});
 
 /**
  * Creates a snapshot so subscribers cannot mutate the module's private state.
@@ -27,14 +30,14 @@ const listeners = new Set();
  */
 function createSnapshot() {
     return {
-        ...state,
-        searchParams: state.searchParams ? { ...state.searchParams } : null,
-        results: [...state.results],
+        ...sharedStore.state,
+        searchParams: sharedStore.state.searchParams ? { ...sharedStore.state.searchParams } : null,
+        results: [...sharedStore.state.results],
         filters: {
-            ...state.filters,
-            airlines: [...state.filters.airlines]
+            ...sharedStore.state.filters,
+            airlines: [...sharedStore.state.filters.airlines]
         },
-        pagination: { ...state.pagination }
+        pagination: { ...sharedStore.state.pagination }
     };
 }
 
@@ -46,7 +49,7 @@ function createSnapshot() {
 function notify() {
     const snapshot = createSnapshot();
 
-    listeners.forEach((listener) => {
+    sharedStore.listeners.forEach((listener) => {
         try {
             listener(snapshot);
         } catch (error) {
@@ -94,17 +97,17 @@ const FlightSearchState = {
      * @returns {Promise<Array>} Retrieved flight results.
      */
     async search(params) {
-        const currentRequestId = ++requestId;
+        const currentRequestId = ++sharedStore.requestId;
         const searchParams = { ...(params || {}) };
 
-        state = {
-            ...state,
+        sharedStore.state = {
+            ...sharedStore.state,
             searchParams,
             status: "loading",
             error: null,
             selectedFlight: null,
             pagination: {
-                ...state.pagination,
+                ...sharedStore.state.pagination,
                 page: 1
             }
         };
@@ -124,16 +127,16 @@ const FlightSearchState = {
                 throw new TypeError("Flight search response must contain a results array");
             }
 
-            if (currentRequestId !== requestId) {
+            if (currentRequestId !== sharedStore.requestId) {
                 return results;
             }
 
-            state = {
-                ...state,
+            sharedStore.state = {
+                ...sharedStore.state,
                 results,
                 status: "succeeded",
                 pagination: {
-                    ...state.pagination,
+                    ...sharedStore.state.pagination,
                     totalCount: Number.isFinite(payload.totalCount) ? payload.totalCount : results.length
                 }
             };
@@ -141,14 +144,14 @@ const FlightSearchState = {
 
             return results;
         } catch (error) {
-            if (currentRequestId === requestId) {
-                state = {
-                    ...state,
+            if (currentRequestId === sharedStore.requestId) {
+                sharedStore.state = {
+                    ...sharedStore.state,
                     results: [],
                     status: "failed",
                     error,
                     pagination: {
-                        ...state.pagination,
+                        ...sharedStore.state.pagination,
                         totalCount: 0
                     }
                 };
@@ -166,8 +169,8 @@ const FlightSearchState = {
      * @returns {Object|null} Selected flight, or null when it is not in the results.
      */
     selectFlight(id) {
-        const selectedFlight = state.results.find((flight) => String(flight.id) === String(id)) || null;
-        state = { ...state, selectedFlight };
+        const selectedFlight = sharedStore.state.results.find((flight) => String(flight.id) === String(id)) || null;
+        sharedStore.state = { ...sharedStore.state, selectedFlight };
         notify();
 
         return selectedFlight;
@@ -181,16 +184,16 @@ const FlightSearchState = {
      */
     updateFilters(partial) {
         const filters = {
-            ...state.filters,
+            ...sharedStore.state.filters,
             ...(partial || {})
         };
 
         filters.airlines = Array.isArray(filters.airlines) ? [...filters.airlines] : [];
-        state = {
-            ...state,
+        sharedStore.state = {
+            ...sharedStore.state,
             filters,
             pagination: {
-                ...state.pagination,
+                ...sharedStore.state.pagination,
                 page: 1
             }
         };
@@ -203,16 +206,16 @@ const FlightSearchState = {
      * @returns {void}
      */
     resetSearch() {
-        requestId += 1;
-        state = {
+        sharedStore.requestId += 1;
+        sharedStore.state = {
             ...initialState(),
             filters: {
-                ...state.filters,
-                airlines: [...state.filters.airlines]
+                ...sharedStore.state.filters,
+                airlines: [...sharedStore.state.filters.airlines]
             },
             pagination: {
                 ...initialState().pagination,
-                pageSize: state.pagination.pageSize
+                pageSize: sharedStore.state.pagination.pageSize
             }
         };
         notify();
@@ -224,9 +227,9 @@ const FlightSearchState = {
      * @returns {Array} Filtered flight results.
      */
     getFilteredResults() {
-        const { airlines, maxDuration, cabinClass } = state.filters;
+        const { airlines, maxDuration, cabinClass } = sharedStore.state.filters;
 
-        return state.results.filter((flight) => {
+        return sharedStore.state.results.filter((flight) => {
             const duration = Number(flight.durationMinutes);
             const flightCabinClass = flight.cabinClass || flight.seatClass;
 
@@ -249,8 +252,8 @@ const FlightSearchState = {
             throw new TypeError("FlightSearchState.subscribe requires a function");
         }
 
-        listeners.add(listener);
-        return () => listeners.delete(listener);
+        sharedStore.listeners.add(listener);
+        return () => sharedStore.listeners.delete(listener);
     },
 
     /**
@@ -259,7 +262,7 @@ const FlightSearchState = {
      * @returns {number} Number of available pages.
      */
     getTotalPages() {
-        const { pageSize, totalCount } = state.pagination;
+        const { pageSize, totalCount } = sharedStore.state.pagination;
         return pageSize > 0 ? Math.ceil(totalCount / pageSize) : 0;
     }
 };
