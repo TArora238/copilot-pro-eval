@@ -30,6 +30,9 @@ export default function initRouteMapPlane(container) {
         return () => { };
     }
 
+    const initialPlaneStyle = plane.getAttribute("style");
+    const initialPlaneTransform = plane.getAttribute("transform");
+
     gsap.registerPlugin(ScrollTrigger, MotionPathPlugin);
 
     const svgNamespace = "http://www.w3.org/2000/svg";
@@ -110,6 +113,25 @@ export default function initRouteMapPlane(container) {
     }
 
     /**
+     * Removes GSAP's current MotionPath transform without discarding authored SVG state.
+     *
+     * @returns {void}
+     */
+    function restorePlanePosition() {
+        if (initialPlaneStyle === null) {
+            plane.removeAttribute("style");
+        } else {
+            plane.setAttribute("style", initialPlaneStyle);
+        }
+
+        if (initialPlaneTransform === null) {
+            plane.removeAttribute("transform");
+        } else {
+            plane.setAttribute("transform", initialPlaneTransform);
+        }
+    }
+
+    /**
      * Recalculates the geometry and replaces the timeline that owns this route's trigger.
      *
      * @returns {void}
@@ -117,6 +139,7 @@ export default function initRouteMapPlane(container) {
     function buildAnimation() {
         animation?.scrollTrigger?.kill();
         animation?.kill();
+        restorePlanePosition();
 
         const pathData = createPathData();
         path.setAttribute("d", pathData);
@@ -179,6 +202,7 @@ export default function initRouteMapPlane(container) {
         window.removeEventListener("resize", rebuildAfterResize);
         animation?.scrollTrigger?.kill();
         animation?.kill();
+        restorePlanePosition();
         path.remove();
         revealMask.remove();
         trail.remove();
