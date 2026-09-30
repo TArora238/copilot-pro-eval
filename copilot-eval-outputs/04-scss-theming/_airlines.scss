@@ -23,3 +23,11 @@
     '"Helvetica Neue", Arial, sans-serif',
     'Arial, sans-serif'
 );
+
+@include theme.airline-theme("TG",
+    #4b2e83,
+    #ffffff,
+    #c69c2d,
+    '"Noto Sans Thai", Tahoma, sans-serif',
+    '"Noto Sans Thai", Tahoma, Arial, sans-serif'
+);
