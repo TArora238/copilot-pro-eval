@@ -1,0 +1,15 @@
+.airline-hub__grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.airline-hub__premier-banner {
+  margin-block-end: 1.5rem;
+}
+
+@media (max-width: 767px) {
+  .airline-hub__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
