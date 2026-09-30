@@ -6,8 +6,6 @@
 <#assign current_layout=themeDisplay.getLayout() />
 <#-- request is the original HttpServletRequest obtained from ThemeDisplay. Use it for URL parameters. -->
 <#assign request=themeDisplay.getRequest() />
-<#-- permissionChecker is injected by Liferay for the current signed-in user and permission checks. -->
-<#assign permission_checker=permissionChecker />
 
 <#--
     Airline-code precedence:
@@ -50,15 +48,18 @@
 </#macro>
 
 <#--
-    permissionChecker checks the current user in the current company. The role must be a
-    regular role named PREMIER_MEMBER; use a resource permission instead for scoped access.
+    Layout templates reliably receive themeDisplay, but not necessarily a top-level
+    permissionChecker binding. getAllRoles() includes the current user's direct and inherited
+    roles; use getRoles() instead when PREMIER_MEMBER must be directly assigned only.
 -->
-<#assign is_premier_member=permission_checker.hasRole(
-    themeDisplay.getCompanyId(),
-    "PREMIER_MEMBER",
-    1,
-    ""
-) />
+<#assign current_user=themeDisplay.getUser() />
+<#assign is_premier_member=false />
+<#list current_user.getAllRoles() as role>
+    <#if role.getName()=="PREMIER_MEMBER">
+        <#assign is_premier_member=true />
+        <#break>
+    </#if>
+</#list>
 
 <div class="airline-hub" data-airline="${airline_code?html}" dir="${text_direction}">
     <#if is_premier_member>
